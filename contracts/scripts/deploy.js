@@ -15,10 +15,12 @@ async function main() {
   // ── Deploy Transparent Proxy ──────────────────────────────────────────────
   const ShipmentTracker = await ethers.getContractFactory("ShipmentTracker");
 
+  const OWNER_ADDRESS = process.env.CONTRACT_OWNER || deployer.address;
+
   console.log("📦 Deploying implementation + proxy...");
   const shipmentTracker = await upgrades.deployProxy(
     ShipmentTracker,
-    [deployer.address],
+    [OWNER_ADDRESS],
     { initializer: "initialize", kind: "transparent" }
   );
   await shipmentTracker.waitForDeployment();
@@ -33,6 +35,8 @@ async function main() {
 
   // ── Authorize trackers ────────────────────────────────────────────────────
   console.log("\n🔑 Authorizing tracker devices...");
+  await (await shipmentTracker.authorizeTracker(OWNER_ADDRESS)).wait();
+  console.log("  ✅ Owner authorized as tracker:", OWNER_ADDRESS);
   await (await shipmentTracker.authorizeTracker(tracker1.address)).wait();
   console.log("  ✅ Tracker 1 authorized:", tracker1.address);
   await (await shipmentTracker.authorizeTracker(tracker2.address)).wait();
