@@ -1,0 +1,72 @@
+groups:
+  - name: vaccine_shipment_alerts
+    interval: 30s
+    rules:
+
+      # ── Critical: 3+ shipments reverted in 10 minutes ──────────────────────
+      - alert: HighShipmentRevertRate
+        expr: increase(shipment_tracker_reverted_shipments_total[10m]) > 3
+        for: 0m
+        labels:
+          severity: critical
+          service: vaccine-tracker
+          team: operations
+        annotations:
+          summary: "🚨 High shipment revert rate"
+          description: >
+            {{ $value | printf "%.0f" }} shipments reverted in the last 10 minutes
+            (threshold: 3). Immediate investigation required.
+
+      # ── Warning: any temperature breach ────────────────────────────────────
+      - alert: TemperatureBreachDetected
+        expr: increase(shipment_tracker_temperature_alerts_total[5m]) > 0
+        for: 0m
+        labels:
+          severity: warning
+          service: vaccine-tracker
+        annotations:
+          summary: "🌡️ Temperature breach detected"
+          description: >
+            A temperature breach was recorded in the last 5 minutes.
+            Shipment has been automatically reverted on-chain.
+
+      # ── Warning: all shipments inactive ────────────────────────────────────
+      - alert: NoActiveShipments
+        expr: >
+          shipment_tracker_active_shipments == 0
+          and shipment_tracker_total_shipments > 0
+        for: 5m
+        labels:
+          severity: warning
+          service: vaccine-tracker
+        annotations:
+          summary: "⚠️ No active shipments"
+          description: >
+            All {{ $value }} shipments are inactive. This may indicate a
+            system issue or all shipments have been completed/reverted.
+
+      # ── Critical: blockchain exporter unreachable ───────────────────────────
+      - alert: BlockchainExporterDown
+        expr: up{job="blockchain-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: monitoring
+        annotations:
+          summary: "🔴 Blockchain exporter is down"
+          description: >
+            The blockchain metrics exporter has been unreachable for more
+            than 1 minute. Metrics collection has stopped.
+
+      # ── Critical: blockchain not producing blocks ───────────────────────────
+      - alert: BlockchainStalled
+        expr: increase(blockchain_block_height[5m]) == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: blockchain
+        annotations:
+          summary: "⛓️ Blockchain stalled"
+          description: >
+            No new blocks have been produced in the last 5 minutes.
+            The Hardhat node may have crashed.

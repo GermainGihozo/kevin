@@ -1,0 +1,21 @@
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install wget for healthcheck
+RUN apk add --no-cache wget
+
+# Copy package files (build context is the contracts/ directory)
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --legacy-peer-deps
+
+# Copy contract source
+COPY . .
+
+# Expose Hardhat node port
+EXPOSE 8545
+
+# Start Hardhat node
+CMD ["node", "node_modules/hardhat/internal/cli/cli.js", "node", "--hostname", "0.0.0.0"]

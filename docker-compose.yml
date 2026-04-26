@@ -1,0 +1,133 @@
+# ── Environment ───────────────────────────────────────────────────────────────
+# Copy .env.example to .env and fill in SLACK_WEBHOOK_URL before running.
+# CONTRACT_ADDRESS is written automatically by the deploy script.
+
+services:
+
+  # ── Hardhat local blockchain ─────────────────────────────────────────────────
+  hardhat-node:
+    profiles: ["full"]
+    build:
+      context: ./contracts
+      dockerfile: ../docker/Dockerfile.hardhat
+    ports:
+      - "8545:8545"
+    environment:
+      - NODE_ENV=development
+    networks:
+      - vaccine-tracker
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8545"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ── React frontend ────────────────────────────────────────────────────────────
+  frontend:
+    profiles: ["full"]
+    build:
+      context: ./docker
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_CONTRACT_ADDRESS=${CONTRACT_ADDRESS:-0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512}
+      - VITE_CHAIN_ID=31337
+      - VITE_RPC_URL=http://hardhat-node:8545
+    depends_on:
+      hardhat-node:
+        condition: service_healthy
+    networks:
+      - vaccine-tracker
+    restart: unless-stopped
+
+  # ── Blockchain metrics exporter ───────────────────────────────────────────────
+  blockchain-exporter:
+    build:
+      context: ./docker/blockchain-exporter
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - BLOCKCHAIN_RPC_URL=${BLOCKCHAIN_RPC_URL:-http://host.docker.internal:8545}
+      - CONTRACT_ADDRESS=${CONTRACT_ADDRESS:-0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512}
+      - EXPORTER_PORT=8080
+      - SCRAPE_INTERVAL_MS=15000
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - vaccine-tracker
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── Prometheus ────────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - vaccine-tracker
+    restart: unless-stopped
+    # No depends_on — exporter connects to host Hardhat node directly
+
+  # ── Grafana ───────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.4.2
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/alerting:/etc/grafana/provisioning/alerting:ro
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      # Unified alerting (Grafana 9+)
+      - GF_ALERTING_ENABLED=false
+      - GF_UNIFIED_ALERTING_ENABLED=true
+      # Slack webhook — set in your .env file
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      # Disable telemetry
+      - GF_ANALYTICS_REPORTING_ENABLED=false
+      - GF_ANALYTICS_CHECK_FOR_UPDATES=false
+    depends_on:
+      - prometheus
+    networks:
+      - vaccine-tracker
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+networks:
+  vaccine-tracker:
+    driver: bridge
+
+volumes:
+  prometheus_data:
+  grafana_data:

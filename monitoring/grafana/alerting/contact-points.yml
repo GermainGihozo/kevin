@@ -1,0 +1,30 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: slack-operations
+    receivers:
+      - uid: slack-ops-receiver
+        type: slack
+        settings:
+          url: "${SLACK_WEBHOOK_URL}"
+          channel: "#vaccine-tracker-alerts"
+          username: "VaccineChain Alerting"
+          icon_emoji: ":rotating_light:"
+          title: |
+            {{ template "slack.default.title" . }}
+          text: |
+            {{ range .Alerts }}
+            *Alert:* {{ .Annotations.summary }}
+            *Severity:* {{ .Labels.severity }}
+            *Details:* {{ .Annotations.description }}
+            {{ end }}
+        disableResolveMessage: false
+
+  # Fallback: log to Grafana UI only (works without Slack config)
+  - orgId: 1
+    name: grafana-default
+    receivers:
+      - uid: grafana-default-receiver
+        type: grafana-oncall-app
+        disableResolveMessage: false
