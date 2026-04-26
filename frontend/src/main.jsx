@@ -33,7 +33,7 @@ const connectors = connectorsForWallets(
     },
   ],
   {
-    appName: 'Vaccine Shipment Tracker',
+          appName: 'VaxLedger',
     projectId: 'local-dev-no-cloud',   // required field but not used for injected wallets
   }
 )

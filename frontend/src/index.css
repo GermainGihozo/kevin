@@ -11,12 +11,10 @@
   /* ── Cards ── */
   .card {
     @apply bg-slate-900 rounded-2xl border border-slate-800 p-6
-           shadow-lg shadow-black/20 transition-all duration-200
-           hover:border-slate-700;
+           shadow-lg shadow-black/20;
   }
   .card-sm {
-    @apply bg-slate-900 rounded-xl border border-slate-800 p-4
-           transition-all duration-200;
+    @apply bg-slate-900 rounded-xl border border-slate-800 p-4;
   }
 
   /* ── Buttons ── */
@@ -121,82 +119,4 @@ input[type='range'] { @apply accent-cyan-500; }
 .header-line {
   background: linear-gradient(90deg, transparent, #06b6d4 30%, #3b82f6 70%, transparent);
   height: 1px;
-}
-
-/* ── Animations ── */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes slide-in-left {
-  from {
-    opacity: 0;
-    transform: translateX(-16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out;
-}
-
-.animate-slide-up {
-  animation: slide-up 0.3s ease-out;
-}
-
-.animate-slide-in-left {
-  animation: slide-in-left 0.3s ease-out;
-}
-
-/* ── Responsive utilities ── */
-@media (max-width: 1023px) {
-  /* Mobile-friendly card padding */
-  .card {
-    @apply p-4;
-  }
-
-  .card-sm {
-    @apply p-3;
-  }
-
-  /* Reduce header size on mobile */
-  .text-gradient-cyan {
-    font-size: 0.875rem;
-  }
-}
-
-/* ── Grid adjustments ── */
-@layer utilities {
-  .grid-auto-fit {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  }
-
-  .grid-auto-fill {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  }
-
-  /* Safe area for mobile notch support */
-  .safe-p {
-    padding-left: max(1rem, env(safe-area-inset-left));
-    padding-right: max(1rem, env(safe-area-inset-right));
-  }
 }

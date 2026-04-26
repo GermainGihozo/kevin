@@ -179,7 +179,7 @@ app.get('/health', (_req, res) => {
 
 app.get('/', (_req, res) => {
   res.json({
-    name: 'VaccineChain Blockchain Exporter',
+    name: 'VaxLedger Blockchain Exporter',
     version: '1.1.0',
     endpoints: { metrics: '/metrics', health: '/health' },
   })

@@ -1,15 +1,24 @@
 import { useState, useEffect } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/contract'
-import { Package, Loader2, CheckCircle, AlertCircle, Copy } from 'lucide-react'
+import { Package, Loader2, CheckCircle, AlertCircle, Copy, Wallet } from 'lucide-react'
 
 const TRACKER1 = import.meta.env.VITE_TRACKER1_ADDRESS || ''
 const TRACKER2 = import.meta.env.VITE_TRACKER2_ADDRESS || ''
 
 export default function CreateShipment({ onShipmentCreated }) {
+  const { address: connectedAddress } = useAccount()
   const [batchNumber, setBatchNumber]       = useState('')
   const [trackerAddress, setTrackerAddress] = useState('')
   const [submitted, setSubmitted]           = useState(false)
+
+  // Default tracker to connected wallet when it first becomes available
+  useEffect(() => {
+    if (connectedAddress && !trackerAddress) {
+      setTrackerAddress(connectedAddress)
+    }
+  }, [connectedAddress]) // eslint-disable-line
 
   const { writeContract, data: hash, error, isPending, reset } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
@@ -59,9 +68,20 @@ export default function CreateShipment({ onShipmentCreated }) {
 
         {/* Tracker Address */}
         <div>
-          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-widest mb-2">
-            Tracker Device Address
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+              Tracker Device Address
+            </label>
+            {connectedAddress && trackerAddress.toLowerCase() !== connectedAddress.toLowerCase() && (
+              <button
+                type="button"
+                onClick={() => setTrackerAddress(connectedAddress)}
+                className="flex items-center gap-1 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                <Wallet className="w-3 h-3" /> Use my wallet
+              </button>
+            )}
+          </div>
           <input
             type="text"
             value={trackerAddress}
@@ -70,6 +90,16 @@ export default function CreateShipment({ onShipmentCreated }) {
             disabled={busy}
             className="input font-mono"
           />
+
+          {/* Warning when tracker ≠ connected wallet */}
+          {connectedAddress && trackerAddress && trackerAddress.toLowerCase() !== connectedAddress.toLowerCase() && (
+            <div className="mt-2 flex items-start gap-2 p-2.5 bg-yellow-950/50 border border-yellow-500/30 rounded-lg">
+              <AlertCircle className="w-3.5 h-3.5 text-yellow-400 shrink-0 mt-0.5" />
+              <p className="text-xs text-yellow-300">
+                This address differs from your connected wallet. Only the assigned tracker address can call <code className="bg-slate-800 px-1 rounded">updateStatus</code> — make sure that address is also authorized and you can sign with it.
+              </p>
+            </div>
+          )}
 
           {/* Quick-fill authorized trackers */}
           {(TRACKER1 || TRACKER2) && (

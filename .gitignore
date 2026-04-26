@@ -8,6 +8,7 @@ contracts/cache/
 contracts/node_modules/
 contracts/deployment-info.json
 contracts/.openzeppelin/
+contracts/.env
 
 # Frontend
 frontend/node_modules/

@@ -1,7 +1,7 @@
 {
   "name": "vaccine-chain-exporter",
   "version": "1.1.0",
-  "description": "Prometheus exporter for VaccineChain blockchain metrics",
+  "description": "Prometheus exporter for VaxLedger blockchain metrics",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"

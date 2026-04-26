@@ -24,30 +24,22 @@ export default function Dashboard() {
       <main className="flex-1 min-w-0 w-full lg:w-auto p-4 lg:p-8 space-y-6 animate-fade-in">
         {/* Hero banner */}
         <div
-          className="rounded-2xl border border-cyan-500/20 p-4 sm:p-6 shadow-xl shadow-black/20 overflow-hidden"
+          className="rounded-2xl border border-purple-500/20 p-4 sm:p-6 shadow-xl shadow-black/20 overflow-hidden animate-slide-up"
           style={{
-            background: 'linear-gradient(135deg, rgba(8,145,178,0.18) 0%, rgba(15,23,42,1) 55%)',
+            background: 'linear-gradient(135deg, rgba(168,85,247,0.18) 0%, rgba(15,23,42,1) 55%)',
           }}
         >
-          {/* Grid overlay */}
-          <div
-            className="absolute inset-0 opacity-[0.07] pointer-events-none"
-            style={{
-              backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2306b6d4' fill-opacity='1'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E\")",
-            }}
-          />
-
           {/* Glow blob */}
-          <div className="absolute -top-10 -left-10 w-40 h-40 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-10 -left-10 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div className="min-w-0">
-              <p className="text-xs text-cyan-400 font-semibold uppercase tracking-widest mb-1 flex items-center gap-1.5">
+              <p className="text-xs text-purple-400 font-semibold uppercase tracking-widest mb-1 flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse inline-block flex-shrink-0" />
                 <span className="truncate">Live Dashboard</span>
               </p>
               <h2 className="text-xl sm:text-2xl font-bold text-white break-words">
-                Vaccine Shipment Tracker
+                Blockchain Temperature Based Vaccine Logistics
               </h2>
               <p className="text-slate-400 text-xs sm:text-sm mt-1">
                 Monitor cold-chain integrity
@@ -76,12 +68,12 @@ export default function Dashboard() {
                 <div className="card h-full flex flex-col">
                   <div className="flex items-center justify-between mb-4 gap-2">
                     <h3 className="font-semibold text-white flex items-center gap-2">
-                      <span className="w-1 h-4 rounded-full bg-cyan-500 inline-block flex-shrink-0" />
+                      <span className="w-1 h-4 rounded-full bg-purple-500 inline-block flex-shrink-0" />
                       <span className="truncate">Recent Shipments</span>
                     </h3>
                     <button
                       onClick={() => setTab('shipments')}
-                      className="text-xs text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors flex-shrink-0"
+                      className="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 transition-colors flex-shrink-0"
                     >
                       View all <ChevronRight className="w-3 h-3" />
                     </button>
@@ -105,10 +97,10 @@ export default function Dashboard() {
 
                 {/* Quick Action Card */}
                 <div
-                  className="card border-cyan-500/25 flex flex-col"
-                  style={{ background: 'linear-gradient(135deg, rgba(6,182,212,0.08) 0%, rgba(15,23,42,1) 70%)' }}
+                  className="card border-purple-500/25 flex flex-col"
+                  style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.08) 0%, rgba(15,23,42,1) 70%)' }}
                 >
-                  <p className="text-xs text-cyan-400 font-semibold uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                  <p className="text-xs text-purple-400 font-semibold uppercase tracking-widest mb-2 flex items-center gap-1.5">
                     🌡️ Quick Action
                   </p>
                   <p className="text-xs text-slate-300 mb-4 leading-relaxed">
@@ -129,7 +121,7 @@ export default function Dashboard() {
         {tab === 'shipments' && (
           <div className="card">
             <h3 className="font-semibold text-white mb-5 flex items-center gap-2">
-              <span className="w-1 h-4 rounded-full bg-cyan-500 inline-block flex-shrink-0" />
+              <span className="w-1 h-4 rounded-full bg-purple-500 inline-block flex-shrink-0" />
               All Shipments
             </h3>
             <ShipmentList refreshTrigger={refresh} />
@@ -140,7 +132,7 @@ export default function Dashboard() {
           <div className="w-full max-w-2xl">
             <div className="card">
               <h3 className="font-semibold text-white mb-1 flex items-center gap-2">
-                <span className="w-1 h-4 rounded-full bg-purple-500 inline-block flex-shrink-0" />
+                <span className="w-1 h-4 rounded-full bg-pink-500 inline-block flex-shrink-0" />
                 Create New Shipment
               </h3>
               <p className="text-sm text-slate-400 mb-6 ml-3">
@@ -166,6 +158,7 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+        </div>
       </main>
     </div>
   )

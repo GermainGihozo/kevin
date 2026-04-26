@@ -4,6 +4,7 @@ import {
   useWaitForTransactionReceipt,
   useReadContract,
   useReadContracts,
+  useAccount,
 } from 'wagmi'
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/contract'
 import {
@@ -211,6 +212,8 @@ export default function SensorSimulator({ onUpdate }) {
   const [autoMode, setAutoMode]         = useState(false)
   const autoRef = useRef(null)
 
+  const { address: connectedAddress } = useAccount()
+
   const { writeContract, data: hash, error, isPending, reset } = useWriteContract()
   const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
 
@@ -227,7 +230,21 @@ export default function SensorSimulator({ onUpdate }) {
   const isBreach = temperature < -80 || temperature > 8
   const busy     = isPending || isConfirming
 
-  // Send reading to chain
+  // Authorization checks
+  const { data: isAuthorized } = useReadContract({
+    address: CONTRACT_ADDRESS,
+    abi: CONTRACT_ABI,
+    functionName: 'isTrackerAuthorized',
+    args: connectedAddress ? [connectedAddress] : undefined,
+    query: { enabled: !!connectedAddress, refetchInterval: 8_000 },
+  })
+
+  const shipmentTracker = shipmentData?.tracker?.toLowerCase()
+  const walletLower     = connectedAddress?.toLowerCase()
+  const wrongTracker    = !!(selectedId && shipmentData && shipmentTracker !== walletLower)
+  const notAuthorized   = !!(selectedId && isAuthorized === false)
+  const canSend         = !wrongTracker && !notAuthorized
+
   const sendReading = useCallback(() => {
     if (!selectedId || isPending || isConfirming) return
     const loc = useCustomLoc ? (customLocation.trim() || 'Unknown') : location
@@ -418,6 +435,31 @@ export default function SensorSimulator({ onUpdate }) {
             )}
           </div>
 
+          {/* Authorization errors */}
+          {notAuthorized && (
+            <div className="flex items-start gap-3 p-4 bg-yellow-950/60 border border-yellow-500/40 rounded-xl">
+              <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-yellow-300">Wallet Not Authorized</p>
+                <p className="text-xs text-yellow-400/80 mt-0.5">
+                  Your connected wallet (<code className="bg-slate-800 px-1 rounded">{connectedAddress?.slice(0,6)}…{connectedAddress?.slice(-4)}</code>) is not an authorized tracker. Ask the contract owner to call <code className="bg-slate-800 px-1 rounded">authorizeTracker</code> for your address.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {wrongTracker && !notAuthorized && (
+            <div className="flex items-start gap-3 p-4 bg-yellow-950/60 border border-yellow-500/40 rounded-xl">
+              <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-yellow-300">Wrong Wallet for This Shipment</p>
+                <p className="text-xs text-yellow-400/80 mt-0.5">
+                  Shipment #{selectedId} is assigned to tracker <code className="bg-slate-800 px-1 rounded">{shipmentData?.tracker?.slice(0,6)}…{shipmentData?.tracker?.slice(-4)}</code>. Switch to that account in MetaMask to send readings.
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Breach warning */}
           {isBreach && selectedId && (
             <div className="flex items-start gap-3 p-4 bg-red-950/60 border border-red-500/40 rounded-xl">
@@ -451,7 +493,7 @@ export default function SensorSimulator({ onUpdate }) {
           <button
             type="button"
             onClick={sendReading}
-            disabled={busy || autoMode || !selectedId}
+            disabled={busy || autoMode || !selectedId || !canSend}
             className={`w-full ${isBreach ? 'btn-danger' : 'btn-primary'}`}
           >
             {busy ? (
@@ -460,6 +502,7 @@ export default function SensorSimulator({ onUpdate }) {
               <><Zap className="w-4 h-4" />Send Reading to Chain</>
             )}
           </button>
+
 
           {autoMode && (
             <p className="text-center text-xs text-cyan-400 animate-pulse">

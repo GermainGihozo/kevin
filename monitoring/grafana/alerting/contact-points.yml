@@ -9,7 +9,7 @@ contactPoints:
         settings:
           url: "${SLACK_WEBHOOK_URL}"
           channel: "#vaccine-tracker-alerts"
-          username: "VaccineChain Alerting"
+          username: "VaxLedger Alerting"
           icon_emoji: ":rotating_light:"
           title: |
             {{ template "slack.default.title" . }}
